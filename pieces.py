@@ -21,6 +21,7 @@ class Pieces:
             "A1": "r", "C1": "r", "E1": "r", "G1": "r",
         }
 
+    
     # Draws pieces
     def draw_piece(self, screen, squares):
         for name, piece in self.positions.items():
