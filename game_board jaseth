@@ -5,7 +5,7 @@ from pathlib import Path
 
 pygame.init()
 
-# --- Display setup (fixed logical size; portable) ---
+#  Display setup 
 LOGICAL_W, LOGICAL_H = 416, 624
 screen = pygame.display.set_mode((LOGICAL_W, LOGICAL_H))
 pygame.display.set_caption('Double Jump')
@@ -13,7 +13,7 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 28)
 title_font = pygame.font.SysFont(None, 40)
 
-# --- Portable asset loading (no absolute paths) ---
+#  Portable asset loading
 BASE_DIR = Path(__file__).resolve().parent
 CANDIDATE_DIRS = [BASE_DIR, BASE_DIR / "sprites"]
 
@@ -40,7 +40,7 @@ cyber_board = pygame.transform.smoothscale(cyber_board, (LOGICAL_W, LOGICAL_H))
 green_puck = load_image('green_puck.png')
 red_puck   = load_image('Red_puck.png')
 
-# --- Board layout constants (unchanged) ---
+# Board layout constants 
 CELL_W, CELL_H = 38, 38
 ORIGIN_X, ORIGIN_Y = 44, 134  # A8 at this top-left
 COLUMNS = "ABCDEFGH"
