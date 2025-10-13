@@ -1,5 +1,6 @@
 import pygame
 from sys import exit
+from pieces import Pieces
 
 pygame.init()
 screen = pygame.display.set_mode((416, 624))
@@ -7,7 +8,7 @@ pygame.display.set_caption('Double Jump')
 clock = pygame.time.Clock()
 
 # Background image
-cyber_board = pygame.image.load(r'sprites\Green_Cyber_checker_board.jpg')
+cyber_board = pygame.image.load('/Users/landonphipps/PycharmProjects/DoubleJump/sprites/Green_Cyber_checker_board.jpg')
 cyber_board = pygame.transform.scale(cyber_board, (416, 624))
 
 # Board layout constants
@@ -44,7 +45,11 @@ def create_board_squares():
             squares[name] = (surf, rect)
     return squares
 
+
 squares = create_board_squares()
+
+#adds pieces constructor
+pieces = Pieces(CELL_W, CELL_H)
 
 # Example: how to access one square later:
 # A8_surf, A8_rect = squares["A8"]
@@ -74,6 +79,8 @@ while True:
             if (mouse_click):
                 print(f"Clicked: {name}")
 
+    # Draw the pieces on the board
+    pieces.draw_piece(screen, squares)
 
 
 
@@ -81,3 +88,4 @@ while True:
 
     pygame.display.update()
     clock.tick(60)
+
