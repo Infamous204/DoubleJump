@@ -8,7 +8,7 @@ pygame.display.set_caption('Double Jump')
 clock = pygame.time.Clock()
 
 # Background image
-cyber_board = pygame.image.load('/Users/landonphipps/PycharmProjects/DoubleJump/sprites/Green_Cyber_checker_board.jpg')
+cyber_board = pygame.image.load(r'sprites/Green_Cyber_checker_board.jpg')
 cyber_board = pygame.transform.scale(cyber_board, (416, 624))
 
 # Board layout constants
