@@ -24,6 +24,7 @@ class Game_board:
         self.selected_square = None
         self.highlight_color = (255, 215, 0)  # gold outline for selection
         self.highlight_thickness = 3
+        self.current_turn = "r"
         return
 
         
@@ -96,9 +97,11 @@ class Game_board:
             # handle selection/move if a click happened
             if mouse_clicked_square:
                 if self.selected_square is None:
-                    # Pick a piece (only if one exists here)
+                    # Pick a piece (only if it's the players turn)
                     if self.pieces.has_piece(mouse_clicked_square):
-                        self.selected_square = mouse_clicked_square
+                        piece = self.pieces.get_piece(mouse_clicked_square)
+                        if piece[0] == self.current_turn:
+                            self.selected_square = mouse_clicked_square
                 else:
                     # We have a selected piece; attempt to move
                     if mouse_clicked_square == self.selected_square:
@@ -106,7 +109,8 @@ class Game_board:
                         self.selected_square = None
                     else:
                         moved = self.pieces.try_move(self.selected_square, mouse_clicked_square)
-                        # Either way, clear selection after attempting
+                        if moved:
+                            self.current_turn = "g" if self.current_turn == "r" else "r"
                         self.selected_square = None
 
             # draw selection highlight (after squares but before pieces)
@@ -114,9 +118,13 @@ class Game_board:
                 _surf, rect = self.squares[self.selected_square]
                 pygame.draw.rect(self.screen, self.highlight_color, rect, self.highlight_thickness)
 
-            # draw pieces
+            # draw pieces and show turns on screen
             self.pieces.draw_piece(self.screen, self.squares)
 
+            font = pygame.font.SysFont('Arial', 28)
+            turn =  f"Turn: {'Red' if self.current_turn == 'r' else 'Green'}"
+            text = font.render(turn, True, (255, 255, 255))
+            self.screen.blit(text, (10, 10))
             pygame.display.update()
             self.clock.tick(60)
 
