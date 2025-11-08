@@ -44,6 +44,8 @@ class Game_board:
         self.turn_time = 60 # 1 minute timer for each turn
         self.turn_start = pygame.time.get_ticks()
         self.time_remaining = self.turn_time
+        self.paused_time = 0
+        self.pause_start = None
 
         self.win = Win(self.pieces)
 
@@ -104,7 +106,10 @@ class Game_board:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     # Pause button click?
                     if self.paused_button_rect and self.paused_button_rect.collidepoint(event.pos):
+                        self.pause_start = pygame.time.get_ticks()
                         choice = self.pause.show_menu(self.screen)
+                        paused_length = (pygame.time.get_ticks() - self.pause_start)
+                        self.turn_start += paused_length
                         if choice == "menu":
                             return "menu"  # returns to checkers_game.py
 
