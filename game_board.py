@@ -39,6 +39,12 @@ class Game_board:
         self.highlight_color = (255, 215, 0)  # gold outline for selection
         self.highlight_thickness = 3
         self.current_turn = "r"
+
+        #Turn timer
+        self.turn_time = 60 # 1 minute timer for each turn
+        self.turn_start = pygame.time.get_ticks()
+        self.time_remaining = self.turn_time
+
         self.win = Win(self.pieces)
 
         # game-over UI state
@@ -140,6 +146,9 @@ class Game_board:
                         moved = self.pieces.try_move(self.selected_square, mouse_clicked_square)
                         if moved:
                             self.current_turn = "g" if self.current_turn == "r" else "r"
+                            #Updates turn timer for new turn
+                            self.turn_start = pygame.time.get_ticks()
+                            self.time_remaining = self.turn_time
 
                             # WIN
                             just_moved = "g" if self.current_turn == "r" else "r"
@@ -171,6 +180,23 @@ class Game_board:
 
             # Draw pause stuff
             self.paused_button_rect = self.pause.draw_pause_button(self.screen)
+
+            # Update turn timer
+            elapsed_time = (pygame.time.get_ticks() - self.turn_start) / 1000
+            self.time_remaining = max(0, self.turn_time - elapsed_time)
+
+            # End turn if the timer runs out
+            if self.time_remaining <= 0:
+                self.current_turn = "g" if self.current_turn == "r" else "r"
+                self.turn_start = pygame.time.get_ticks()
+                self.time_remaining = self.turn_time
+
+            # Add timer on game board
+            font = pygame.font.SysFont('Arial', 28)
+            timer_text = f"Timer: {int(self.time_remaining)}s"
+            timer_surf = font.render(timer_text, True, (255, 255, 255))
+            self.screen.blit(timer_surf, (225, 10))
+
 
             pygame.display.update()
             self.clock.tick(60)
