@@ -15,7 +15,7 @@ class Concede:
 
     def draw(self, screen, mouse_pos):
         self.button.update_hover(mouse_pos)
-        self.button.draw(screen)
+        self.button.draw(screen) 
 
     def handle_event(self, event):
         """Returns True when button is clicked"""

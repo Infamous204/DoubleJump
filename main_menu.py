@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk 
 
 class Menu(tk.Tk):
     def __init__(self):

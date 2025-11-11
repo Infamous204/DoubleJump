@@ -4,7 +4,7 @@ from button import Button
 class Pause:
     def __init__(self):
         self.small_font = pygame.font.SysFont("Arial", 22)
-        self.big_font = pygame.font.SysFont("Arial", 56)
+        self.big_font = pygame.font.SysFont("Arial", 56) 
 
         # Small pause button (top-right)
         self.pause_btn_w, self.pause_btn_h = 40, 32
@@ -56,7 +56,7 @@ class Pause:
             mouse_pos = pygame.mouse.get_pos()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    return "quit"    # or "quit" if you want window X to quit the whole app
+                    return "quit"    # or "menu" if you want window X to quit the whole app (Yes, I know that's backwards)
                 if self.resume_button.handle_event(event):
                     return "resume"
                 if self.menu_button.handle_event(event):

@@ -8,7 +8,7 @@ def run_menu_get_choice():
 
 def run_local_game():
     import game_board
-    Game_board = game_board.Game_board
+    Game_board = game_board.Game_board 
  
     pygame.init()
     game = Game_board()

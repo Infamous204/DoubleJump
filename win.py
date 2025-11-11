@@ -1,7 +1,7 @@
 
 class Win:
     def __init__(self, pieces):
-        self.pieces = pieces
+        self.pieces = pieces  
 
     def check_winner(self, next_turn_color: str):
         """
@@ -13,5 +13,5 @@ class Win:
 
         for piece in self.pieces.positions.values():
             if piece and piece[0] == opponent:
-                return None  # opponent still has pieces
+                return None  # means opponent still has pieces
         return next_turn_color

@@ -260,14 +260,6 @@ class Game_board:
         btn_text_rect = btn_text.get_rect(center=self.menu_button_rect.center)
         self.screen.blit(btn_text, btn_text_rect)
 
-    
-    
-    def return_to_menu(self):
-        """Close pygame and go back to the main menu.
-        pygame.quit()
-        main_menu.Menu().mainloop()
-        exit()"""
-        return "menu"
 
 
     def test(self):

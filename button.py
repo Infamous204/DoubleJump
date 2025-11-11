@@ -4,7 +4,7 @@ class Button:
     def __init__(self, image, x_pos, y_pos, text_input, font=None, text_color="white", hover_color="#dddddd"):
         self.image = image  # pre-sized Surface OR None (we’ll autosize off text)
         self.x_pos = x_pos
-        self.y_pos = y_pos
+        self.y_pos = y_pos 
         self.font = font or pygame.font.SysFont("Arial", 32)
         self.text_input = text_input
         self.text_color = text_color
