@@ -5,6 +5,9 @@ from win import Win
 import main_menu
 from pause import Pause
 from concede import Concede
+from button import Button
+from datetime import datetime 
+import os
 
 class Game_board:
     """These are commented out beacuse I THINK we don't need them anymore but I'm not 100% sure."""
@@ -58,6 +61,34 @@ class Game_board:
         #Concede button
         self.concede_button = Concede(self.screen.get_width(), self.screen.get_height())
 
+        #Undo button
+        btn_img = pygame.Surface((140, 40))
+        btn_img.fill((240, 240, 240))
+        self.undo_button = Button(
+            btn_img,
+            x_pos=self.screen.get_width() - 100,
+            y_pos=self.screen.get_height() - 50,
+            text_input="Undo",
+            font=pygame.font.SysFont("Arial", 22),
+            text_color=(30, 30, 30),
+            hover_color=(0, 0, 160),
+        )
+
+        # Logging
+        # Create unique log file per game
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.log_filename = f"move_log_{timestamp}.txt"
+
+        # Ensure folder exists
+        os.makedirs("logs", exist_ok=True)
+        self.log_filepath = os.path.join("logs", self.log_filename)
+
+        # Write header to the new log file
+        with open(self.log_filepath, "w") as f:
+            f.write(f"Move Log — Game Started {timestamp}\n")
+            f.write("---------------------------------------\n")
+        self.move_history = []
+
         # Paused vars
         self.pause = Pause()
         self.paused = False
@@ -80,10 +111,9 @@ class Game_board:
             for r_idx, rank in enumerate(ROWS):  # 0..7 for 8..1
                 y = ORIGIN_Y + r_idx * (CELL_H + y_offset)
                 name = f"{file_}{rank}"
-                color = 'Grey'
 
-                surf = pygame.Surface((CELL_W, CELL_H))
-                surf.fill(color)
+                surf = pygame.Surface((CELL_W, CELL_H), pygame.SRCALPHA)
+                surf.fill((0,0,0,0))
                 rect = surf.get_rect(topleft=(x, y))
 
                 squares[name] = (surf, rect)
@@ -120,6 +150,9 @@ class Game_board:
                     # Concede button click
                     if self.concede_button.handle_event(event) and not self.game_over:
                         self.handle_concede()
+                    if not self.game_over and self.undo_button.handle_event(event):
+                        self.undo_last_move()
+
 
 
 
@@ -156,10 +189,30 @@ class Game_board:
                         # Clicking it again cancels selection
                         self.selected_square = None
                     else:
+                        # Snapshot state BEFORE move
+                        prev_positions = self.pieces.positions.copy()  # shallow copy OK (values are strings) :contentReference[oaicite:3]{index=3}
+                        prev_turn = self.current_turn
+
                         moved = self.pieces.try_move(self.selected_square, mouse_clicked_square)
                         if moved:
+                            # Save snapshot + metadata for undo / logging
+                            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            self.move_history.append({
+                                "positions": prev_positions,
+                                "turn": prev_turn,
+                                "from": self.selected_square,
+                                "to": mouse_clicked_square,
+                                "saved_at": timestamp,
+                            })
+
+                            # Log to a text file
+                            with open(self.log_filepath, "a") as f:
+                                game_string = f"{timestamp}  {prev_turn.upper()}: {self.selected_square} -> {mouse_clicked_square}\n"
+                                f.write(game_string)
+
+                            # switch turns
                             self.current_turn = "g" if self.current_turn == "r" else "r"
-                            #Updates turn timer for new turn
+                            # Updates turn timer for new turn
                             self.turn_start = pygame.time.get_ticks()
                             self.time_remaining = self.turn_time
 
@@ -169,11 +222,11 @@ class Game_board:
                             if winner:
                                 self.game_over = True
                                 self.winner = "Red" if winner == "r" else "Green"
-
                                 # reset any selection so highlight disappears
                                 self.selected_square = None
 
                         self.selected_square = None
+
 
             # draw selection highlight (after squares but before pieces)
             if not self.game_over and self.selected_square is not None:
@@ -198,6 +251,11 @@ class Game_board:
             #Draw the concede button and hides on game over
             if not self.game_over:
                 self.concede_button.draw(self.screen, mouse_position)
+
+            #Draw the undo button, should hide on game over.
+            if not self.game_over:
+                self.undo_button.update_hover(mouse_position)
+                self.undo_button.draw(self.screen)
 
             # Update turn timer
             elapsed_time = (pygame.time.get_ticks() - self.turn_start) / 1000
@@ -229,6 +287,32 @@ class Game_board:
         self.game_over = True
         self.winner = "Red" if opponent == "r" else "Green"
         self.selected_square = None
+
+    # Undoes the previous move and pops it from the move_history stack
+    def undo_last_move(self):
+        """Revert the board to the state before the last move."""
+        if not self.move_history:
+            return  # nothing to undo
+
+        # Pop last snapshot
+        last = self.move_history.pop()
+
+        # Restore board and turn
+        self.pieces.positions = last["positions"]
+        self.current_turn = last["turn"]
+
+        # Clear any game-over status that came from that move
+        self.game_over = False
+        self.winner = None
+
+        # Clear selection and reset timer for the restored player's turn
+        self.selected_square = None
+        self.turn_start = pygame.time.get_ticks()
+        self.time_remaining = self.turn_time
+
+        #Print  what was undone:
+        print(f"Undoing move {last['from']} -> {last['to']} from {last['saved_at']}")
+
 
     def show_winner_screen(self):
         """Draw the overlay, winner text, and a button to return to the menu."""
