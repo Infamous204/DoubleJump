@@ -57,8 +57,14 @@ class Menu(tk.Tk):
     
     # NEW currently called when the user chooses Local (2P). Closes the Tk window so we can start pygame cleanly
     def start_local(self):
-        self.choice = "local"
-        self.destroy() 
+        self.choice = "PVP"
+        self.destroy()
+
+    # Start game vs CPU
+    def start_cpu(self):
+        self.choice = "PVC"
+        self.destroy()
+
 
 #-------------------------
 #BASE SCREEN
@@ -100,7 +106,7 @@ class MainMenu(Screen):
             command=app.start_local  # <— handoff
         ).grid(row=2, column=0, pady=6, ipadx=20)
 
-        ttk.Button(wrap, text="Play: vs CPU", command=lambda: app.show("cpu")).grid(row=3, column=0, pady=6, ipadx=20)
+        ttk.Button(wrap, text="Play: vs CPU", command=app.start_cpu).grid(row=3, column=0, pady=6, ipadx=20)
         ttk.Button(wrap, text="Play: Online", command=lambda: app.show("online")).grid(row=4, column=0, pady=6,
                                                                                        ipadx=20)
 

@@ -1,4 +1,6 @@
+import copy
 import pygame
+from pieces_cpu import PiecesCPU
 
 class Pieces:
     def __init__(self, cell_w, cell_h):
@@ -43,7 +45,14 @@ class Pieces:
             piece_rect = img.get_rect(center=rect.center)
             screen.blit(img, piece_rect)
 
-    
+    def get_all_player_positions(self, player):
+        """Return a list of positions for all pieces belonging to a player ('r' or 'g')."""
+        positions = []
+        for pos, piece in self.positions.items():  # assuming self.positions[pos] = (color, piece_type)
+            if piece[0] == player:
+                positions.append(pos)
+        return positions
+
     def has_piece(self, square_name: str):
         return square_name in self.positions
 
@@ -65,53 +74,111 @@ class Pieces:
             return f"{'ABCDEFGH'[col - 1]}{row}"
         return None
 
-    def try_move(self, src: str, dst: str):
-        """
-        Very basic legality:
-          - src has a piece
-          - dst is empty
-          - move is 1 step diagonally forward (no jumps/kings yet)
-            * red ('r') moves "up" the board: row + 1
-            * green ('g') moves "down": row - 1
-        """
+    def copy_positions_only(self):
+        new_pieces = PiecesCPU()
+        new_pieces.positions = self.positions.copy()
+        return new_pieces
+
+    def get_legal_moves_for_piece(self, src):
+        """Return a list of all legal squares for the piece at src."""
         if src not in self.positions:
-            return False
-        if dst in self.positions:
+            return []
+
+        piece = self.positions[src]
+        src_c, src_r = self.algebra_to_rc(src)
+        moves = []
+
+        # Forward direction for normal pieces
+        forward = 1 if piece[0] == "r" else -1
+        directions = [(1, forward), (-1, forward)]
+
+        # Kings can move backward too
+        if piece.endswith("k"):
+            directions += [(1, -forward), (-1, -forward)]
+
+        # Simple moves
+        for dc, dr in directions:
+            dst_c, dst_r = src_c + dc, src_r + dr
+            dst = self.rc_to_algebra(dst_c, dst_r)
+            if dst and dst not in self.positions:
+                moves.append(dst)
+
+        # Jumps/captures
+        for dc, dr in directions:
+            mid_c, mid_r = src_c + dc, src_r + dr
+            dst_c, dst_r = src_c + 2 * dc, src_r + 2 * dr
+            mid = self.rc_to_algebra(mid_c, mid_r)
+            dst = self.rc_to_algebra(dst_c, dst_r)
+            if dst and mid in self.positions:
+                mid_piece = self.positions[mid]
+                if piece[0] != mid_piece[0] and dst not in self.positions:
+                    moves.append(dst)
+
+        return moves
+
+    def get_legal_jumps_for_piece(self, src):
+        piece = self.positions.get(src)
+        if not piece:
+            return []
+
+        src_c, src_r = self.algebra_to_rc(src)
+        jumps = []
+
+        forward = 1 if piece[0] == "r" else -1
+        directions = [(1, forward), (-1, forward)]
+        if piece.endswith("k"):
+            directions += [(1, -forward), (-1, -forward)]
+
+        for dc, dr in directions:
+            mid_c, mid_r = src_c + dc, src_r + dr
+            dst_c, dst_r = src_c + 2 * dc, src_r + 2 * dr
+            mid = self.rc_to_algebra(mid_c, mid_r)
+            dst = self.rc_to_algebra(dst_c, dst_r)
+
+            if dst and mid in self.positions:
+                mid_piece = self.positions[mid]
+                if piece[0] != mid_piece[0] and dst not in self.positions:
+                    jumps.append(dst)
+
+        return jumps
+
+    def try_move(self, src: str, dst: str):
+        if src not in self.positions or dst in self.positions:
             return False
 
-        piece = self.positions[src]   # 'r' or 'g'
+        piece = self.positions[src]
         src_c, src_r = self.algebra_to_rc(src)
         dst_c, dst_r = self.algebra_to_rc(dst)
 
         dc = dst_c - src_c
         dr = dst_r - src_r
-
-        # forward direction by color
         forward = 1 if piece in ("r", "rk") else -1
 
-        # Basic move
-        if abs(dc) == 1 and (dr == forward or piece.endswith("k") and abs(dr) ==1):
-            # legal simple move
-            del self.positions[src]
-            self.positions[dst] = piece
+        # Simple move
+        if abs(dc) == 1 and (dr == forward or piece.endswith("k") and abs(dr) == 1):
+            self.positions[dst] = self.positions.pop(src)
             self.can_king(dst, piece)
             return True
 
-        # Jump and capture opponents piece
+        # Jump / capture
         if abs(dc) == 2 and (dr == 2 * forward or piece.endswith("k") and abs(dr) == 2):
-            # Calculates the midpoints between a piece and the space it's jumping to
             middle_col = src_c + dc // 2
             middle_row = src_r + dr // 2
             middle_square = self.rc_to_algebra(middle_col, middle_row)
 
             if middle_square in self.positions:
                 middle_piece = self.positions[middle_square]
-                # Checks to make sure captured piece is opposite color
-                if (piece[0] == "r" and middle_piece[0] == "g") or (piece[0] == "g" and middle_piece[0] == "r"):
+                if piece[0] != middle_piece[0]:
+                    # Execute capture
                     del self.positions[middle_square]
-                    del self.positions[src]
-                    self.positions[dst] = piece
+                    self.positions[dst] = self.positions.pop(src)
                     self.can_king(dst, piece)
+
+                    # Check for additional jumps from new position
+                    additional_jumps = self.get_legal_jumps_for_piece(dst)
+                    if additional_jumps:
+                        # Must continue jumping; player or CPU will handle this next
+                        return "jump_available"
                     return True
 
         return False
@@ -124,4 +191,6 @@ class Pieces:
         elif piece == "g" and row == 1:
             self.positions[square] = "gk"
 
-
+    def try_move_simulated(self, src, dst):
+        temp = copy.deepcopy(self)
+        return temp.try_move(src, dst)
